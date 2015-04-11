@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<form action="" method="post" name="bitly">
+	{{form.hidden_tag()}}
+	<p>
+		Please enter URL:<br>
+		{{form.url()}}<br>
+	</p>
+	<p>{{form.delete_after_usage}} Delete after first usage</p>
+	<p><input type="submit" value="Bitly it!"></p>
+</form>
+{% endblock %}

@@ -1,0 +1,5 @@
+flask>=0.10.1
+flask-login>=0.2.11
+flask-openid>=1.2.4
+flask-sqlalchemy>=2.0
+flask-wtf>=0.11
