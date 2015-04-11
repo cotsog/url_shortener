@@ -54,6 +54,7 @@ def saturate(key):
     """
     Turn the base [BASE] number [key] into an integer
     """
+    print(key)
     int_sum = 0
     reversed_key = key[::-1]
     for idx, char in enumerate(reversed_key):

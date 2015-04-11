@@ -35,9 +35,9 @@ def index():
         query = db.session.query(func.max(ShortUrl.id).label('max_id'))
         id = query.one().max_id
         id = int(id) + 1 if id else 1
-        url = BASE_URL + dehydrate(id)
+        url = BASE_URL + 's/' + dehydrate(id)
 
-        short_url = ShortUrl(url=url, creator=user_db)
+        short_url = ShortUrl(url=url, creator=user_db, delete_after_first_usage=form.delete_after_usage.data)
 
         full_url = FullUrl(url=form.url.data, short_url=short_url)
 
@@ -101,9 +101,12 @@ def after_login(response):
     return redirect(request.args.get('next') or url_for('index'))
 
 
-@app.route('/<short_url>')
+@app.route('/s/<short_url>')
 def redirect_to(short_url):
-    id = saturate(short_url)
+    try:
+        id = saturate(short_url)
+    except:
+        return redirect(url_for('index'))
     short_url_db = ShortUrl.query.get(id)
 
     if short_url_db is None:
@@ -111,6 +114,11 @@ def redirect_to(short_url):
         return redirect(url_for('index'))
 
     full_url_db = short_url_db.full_url
+
+    if short_url_db.delete_after_first_usage:
+        db.session.delete(short_url_db)
+        db.session.delete(full_url_db)
+        db.session.commit()
     return redirect(full_url_db.url)
 
 
