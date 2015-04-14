@@ -1,0 +1,25 @@
+language: python
+
+os:
+  - linux
+  - osx
+
+python:
+  - "3.4"
+  - "2.7"
+
+install:
+  - "pip install requests"
+  - "pip install selenium"
+  - "pip install prospector"
+
+before_script:
+  - "python main.py &"
+  - "export DISPLAY=:99.0"
+  - "sh -e /etc/init.d/xvfb start"
+  - "sleep 1"
+
+script:
+  - "prospector --strictness veryhigh"
+  - "python tests.py"
+  - "python functional_tests.py"
