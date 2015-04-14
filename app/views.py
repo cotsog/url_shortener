@@ -1,4 +1,4 @@
-from app import app, db, login_manager, openid, dehydrate, saturate, BASE_URL
+from app import app, db, login_manager, openid, dehydrate, saturate, BASE_URL, URLS_PER_PAGE
 from flask import render_template, flash, \
     redirect, session, url_for, request, g
 from flask.ext.login import login_user, logout_user, \
@@ -6,6 +6,8 @@ from flask.ext.login import login_user, logout_user, \
 from .forms import LinkForm, LoginForm
 from .models import User, ShortUrl, FullUrl, ROLE_USER, ROLE_ADMIN
 from sqlalchemy.sql.expression import func
+from bs4 import BeautifulSoup as BS
+from urllib.request import urlopen
 
 
 class UserClass(UserMixin):
@@ -19,6 +21,11 @@ class UserClass(UserMixin):
 
     def get_id(self):
         return str(self.id)
+
+
+def get_title(url):
+    bs = BS(urlopen(url))
+    return str(bs('title')[0].string)
 
 
 @app.route('/', methods = ['GET', 'POST'])
@@ -39,7 +46,9 @@ def index():
 
         short_url = ShortUrl(url=url, creator=user_db, delete_after_first_usage=form.delete_after_usage.data)
 
-        full_url = FullUrl(url=form.url.data, short_url=short_url)
+        title = get_title(form.url.data)
+
+        full_url = FullUrl(url=form.url.data, short_url=short_url, title=title)
 
         db.session.add(short_url)
         db.session.add(full_url)
@@ -49,6 +58,28 @@ def index():
 
         return redirect('/')
     return render_template('index.html', title="Main", form=form)
+
+
+@app.route('/profile')
+@app.route('/profile/<int:page>')
+@login_required
+def my_profile(page=1):
+    user_db = User.query.get(g.user.get_id())
+    paginate = user_db.urls.paginate(page, URLS_PER_PAGE, False)
+    full_urls_db = []
+    for url in paginate.items:
+        full_urls_db.append(url.full_url)
+
+    short_urls = list(map(lambda x: x.url, paginate.items))
+    full_urls = list(map(lambda x: x.url, full_urls_db))
+    titles = list(map(lambda x: x.title, full_urls_db))
+    urls = list(zip(short_urls, full_urls, titles))
+
+    def get_title(url):
+        bs = BS(urlopen(url))
+        return str(bs('title')[0].string)
+
+    return render_template('profile.html', urls=urls, nick=g.user.name, paginate=paginate)
 
 
 @app.route('/login', methods = ['GET', 'POST'])
@@ -120,6 +151,24 @@ def redirect_to(short_url):
         db.session.delete(full_url_db)
         db.session.commit()
     return redirect(full_url_db.url)
+
+
+@app.route('/delete/<short_url>')
+@login_required
+def delete(short_url):
+    id = saturate(short_url)
+    short_url_db = ShortUrl.query.get(id)
+    if short_url_db is None:
+        flash('Url "{0}" is not registered'.format(short_url))
+        return redirect(url_for('index'))
+
+    full_url_db = short_url_db.full_url
+
+    db.session.delete(short_url_db)
+    db.session.delete(full_url_db)
+    db.session.commit()
+
+    return redirect(url_for('index'))
 
 
 @login_manager.user_loader

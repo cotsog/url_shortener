@@ -3,7 +3,7 @@ from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.login import LoginManager
 from flask.ext.openid import OpenID
-from config import BASE_DIR, BASE_URL
+from config import BASE_DIR, BASE_URL, URLS_PER_PAGE
 from .base_62 import saturate, dehydrate
 
 app = Flask(__name__)

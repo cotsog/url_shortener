@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div>
+    Nickname: {{ nick }}
+</div>
+{% for url in urls %}
+<div>
+    <a href="http://{{ url[0] }}">Short url</a> | <a href={{ url[1] }}>{{ url[2] }}</a>
+    <br>
+    <a href={{ url_for('delete', short_url=url[0].split('/')[-1]) }}>Delete</a>
+</div>
+<br>
+<br>
+{% endfor %}
+{% if paginate.has_prev %}<a href={{ url_for('my_profile', page=paginate.prev_num) }}>&lt;&lt; Previous page</a>{% endif %}{% if paginate.has_prev and paginate.has_next %} | {% endif %}
+{% if paginate.has_next %}<a href={{ url_for('my_profile', page=paginate.next_num) }}>Next page &gt;&gt;</a>{% endif %}
+{% endblock %}

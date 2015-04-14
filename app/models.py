@@ -30,6 +30,7 @@ class FullUrl(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     url = db.Column(db.String(1024))
     short_url_id = db.Column(db.Integer, db.ForeignKey('short_url.id'))
+    title = db.Column(db.String(1024))
 
     def __repr__(self):
         return '<Full url: {0}>'.format(self.url)
